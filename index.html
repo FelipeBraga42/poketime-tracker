@@ -90,7 +90,7 @@
     }
     .label-0 { top: 8px; left: 50%; transform: translateX(-50%); color: #a6adc8; }
     .label-4 { top: 60px; right: 18px; color: #f9e2af; }
-    .label-10 { bottom: 25px; right: 45px; color: #fab387; }
+    .label-15 { bottom: 18px; right: 80px; color: #fab387; }
     .label-20 { bottom: 25px; left: 45px; color: #cba6f7; }
 
     /* Ponteiros */
@@ -176,20 +176,22 @@
     <h1>PRO PokéTime Tracker</h1>
     <div class="local-clock" id="localClock">Horário Local: --:--:--</div>
 
-    <!-- Relógio Analógico 24h -->
+    <!-- Relógio Analógico 24h com fatias atualizadas -->
     <div class="analog-clock">
       <svg class="clock-dial" viewBox="0 0 100 100">
-        <!-- Manhã (04:00 às 10:00) -> 60° a 150° -->
-        <path d="M 50 50 L 75 93.3 A 50 50 0 0 1 6.7 75 Z" fill="#b8860b" />
-        <!-- Dia/Tarde (10:00 às 20:00) -> 150° a 300° -->
-        <path d="M 50 50 L 6.7 75 A 50 50 0 0 1 6.7 25 Z" fill="#d4af37" />
-        <!-- Noite (20:00 às 04:00) -> 300° a 60° -->
-        <path d="M 50 50 L 6.7 25 A 50 50 0 1 1 75 93.3 Z" fill="#121838" />
+        <!-- Manhã (04:00 às 14:59) -> 60° a 225° -->
+        <path d="M 50 50 L 93.3 25 A 50 50 0 0 1 14.6 85.4 Z" fill="#b8860b" />
+        
+        <!-- Tarde (15:00 às 19:59) -> 225° a 300° -->
+        <path d="M 50 50 L 14.6 85.4 A 50 50 0 0 1 6.7 25 Z" fill="#d4af37" />
+        
+        <!-- Noite (20:00 às 03:59) -> 300° a 60° -->
+        <path d="M 50 50 L 6.7 25 A 50 50 0 0 1 93.3 25 Z" fill="#121838" />
       </svg>
 
       <div class="hour-label label-0">00:00</div>
       <div class="hour-label label-4">04:00</div>
-      <div class="hour-label label-10">10:00</div>
+      <div class="hour-label label-15">15:00</div>
       <div class="hour-label label-20">20:00</div>
 
       <div class="hand hour-hand" id="hourHand"></div>
@@ -215,7 +217,7 @@
       const now = new Date();
       document.getElementById('localClock').textContent = `Horário Local: ${now.toLocaleTimeString()}`;
 
-      // Cálculos de tempo exatos
+      // Cálculo de tempo exato
       const elapsedRealSeconds = (now - anchorReal) / 1000;
       const elapsedProSeconds = elapsedRealSeconds * 5;
       const totalProMinutes = anchorProMinutes + Math.floor(elapsedProSeconds / 60);
@@ -224,11 +226,11 @@
       const proMinute = totalProMinutes % 60;
       const proSecond = Math.floor(elapsedProSeconds % 60);
 
-      // Atualiza relógio digital
+      // Atualiza o relógio digital
       const pad = (n) => String(n).padStart(2, '0');
       document.getElementById("pokeClock").textContent = `${pad(proHour)}:${pad(proMinute)}:${pad(proSecond)}`;
 
-      // Atualiza ponteiros analógicos
+      // Atualiza os ponteiros do relógio analógico (15° por hora num mostrador de 24h)
       const anguloHoras = (proHour + proMinute / 60 + proSecond / 3600) * 15;
       const anguloMinutos = (proMinute + proSecond / 60) * 6;
       const anguloSegundos = proSecond * 6;
@@ -237,32 +239,28 @@
       document.getElementById('minuteHand').style.transform = `rotate(${anguloMinutos}deg)`;
       document.getElementById('secondHand').style.transform = `rotate(${anguloSegundos}deg)`;
 
-      // Fase do dia e contagem
+      // Determinação das Fases (Ajustadas às suas definições)
       let phase, nextPhaseHour, phaseColor;
 
-      if (proHour >= 4 && proHour < 10) {
+      if (proHour >= 4 && proHour < 15) {
         phase = "Manhã 🌅";
-        nextPhaseHour = 10;
+        nextPhaseHour = 15;
         phaseColor = "#f9e2af";
-      } else if (proHour >= 10 && proHour < 20) {
-        phase = "Dia / Tarde ☀️";
+      } else if (proHour >= 15 && proHour < 20) {
+        phase = "Tarde ☀️";
         nextPhaseHour = 20;
         phaseColor = "#fab387";
-      } else if (proHour >= 20 || proHour < 0) {
-        phase = "Noite 🌙";
-        nextPhaseHour = 0;
-        phaseColor = "#cba6f7";
       } else {
-        phase = "Madrugada 🌌";
+        phase = "Noite 🌙";
         nextPhaseHour = 4;
-        phaseColor = "#fd79a8";
+        phaseColor = "#cba6f7";
       }
 
       const badge = document.getElementById("phaseBadge");
       badge.textContent = phase;
       badge.style.color = phaseColor;
 
-      // Tempo real restante até a próxima fase (1 min de jogo = 12 seg reais)
+      // Cálculo do tempo restante para a próxima fase (1 min no jogo = 12 seg reais)
       const currentMinutes = proHour * 60 + proMinute;
       let nextPhaseMinutes = nextPhaseHour * 60;
       if (nextPhaseMinutes <= currentMinutes) nextPhaseMinutes += 1440;
