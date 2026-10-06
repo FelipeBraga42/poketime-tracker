@@ -77,7 +77,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      transform: rotate(-90deg); /* Faz o 0° ficar no topo (00:00) */
+      transform: rotate(-90deg); /* 00:00 no topo */
     }
 
     .hour-label {
@@ -167,28 +167,6 @@
       padding: 8px;
       border-radius: 8px;
       border: 1px solid rgba(148, 226, 213, 0.2);
-      margin-bottom: 12px;
-    }
-
-    .calib-box {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .calib-btn {
-      background: #313244;
-      color: var(--text);
-      border: none;
-      padding: 4px 10px;
-      font-size: 0.75rem;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    .calib-btn:hover {
-      background: #45475a;
     }
   </style>
 </head>
@@ -198,7 +176,7 @@
     <h1>PRO PokéTime Tracker</h1>
     <div class="local-clock" id="localClock">Horário Local: --:--:--</div>
 
-    <!-- Relógio Analógico 24 Horas -->
+    <!-- Relógio Analógico 24h -->
     <div class="analog-clock">
       <svg class="clock-dial" viewBox="0 0 100 100">
         <!-- Manhã (04:00 às 10:00) -> 60° a 150° -->
@@ -225,118 +203,82 @@
     <div class="poke-clock" id="pokeClock">--:--:--</div>
     <div class="phase-badge" id="phaseBadge">Carregando...</div>
 
-    <div class="countdown" id="countdown">Próxima fase em: --:--</div>
-
-    <div class="calib-box">
-      <button class="calib-btn" onclick="calibrarManual()">Calibrar com Hora do Jogo</button>
-    </div>
+    <div class="countdown" id="untilNextPhase">Próxima fase em: --h --m</div>
   </div>
 
   <script>
-    // Marco zero ajustado para sincronização contínua de 5x
-    let tempoAncoraReal = new Date();
-    let minutosAncoraPoke = 0;
-    let inicializado = false;
+    // Âncora Universal Sincronizada (UTC)
+    const anchorReal = new Date("2025-05-29T21:00:00Z");
+    const anchorProMinutes = 9 * 60; // 09:00 PRO
 
-    // Tenta obter o offset base ou permite calibração rápida
-    function carregarAnchor() {
-      const salvoAncora = localStorage.getItem('pro_real_anchor');
-      const salvoMinutos = localStorage.getItem('pro_poke_min');
+    function updateTime() {
+      const now = new Date();
+      document.getElementById('localClock').textContent = `Horário Local: ${now.toLocaleTimeString()}`;
 
-      if (salvoAncora && salvoMinutos) {
-        tempoAncoraReal = new Date(parseInt(salvoAncora, 10));
-        minutosAncoraPoke = parseInt(salvoMinutos, 10);
-        inicializado = true;
+      // Cálculos de tempo exatos
+      const elapsedRealSeconds = (now - anchorReal) / 1000;
+      const elapsedProSeconds = elapsedRealSeconds * 5;
+      const totalProMinutes = anchorProMinutes + Math.floor(elapsedProSeconds / 60);
+      
+      const proHour = Math.floor((totalProMinutes / 60) % 24);
+      const proMinute = totalProMinutes % 60;
+      const proSecond = Math.floor(elapsedProSeconds % 60);
+
+      // Atualiza relógio digital
+      const pad = (n) => String(n).padStart(2, '0');
+      document.getElementById("pokeClock").textContent = `${pad(proHour)}:${pad(proMinute)}:${pad(proSecond)}`;
+
+      // Atualiza ponteiros analógicos
+      const anguloHoras = (proHour + proMinute / 60 + proSecond / 3600) * 15;
+      const anguloMinutos = (proMinute + proSecond / 60) * 6;
+      const anguloSegundos = proSecond * 6;
+
+      document.getElementById('hourHand').style.transform = `rotate(${anguloHoras}deg)`;
+      document.getElementById('minuteHand').style.transform = `rotate(${anguloMinutos}deg)`;
+      document.getElementById('secondHand').style.transform = `rotate(${anguloSegundos}deg)`;
+
+      // Fase do dia e contagem
+      let phase, nextPhaseHour, phaseColor;
+
+      if (proHour >= 4 && proHour < 10) {
+        phase = "Manhã 🌅";
+        nextPhaseHour = 10;
+        phaseColor = "#f9e2af";
+      } else if (proHour >= 10 && proHour < 20) {
+        phase = "Dia / Tarde ☀️";
+        nextPhaseHour = 20;
+        phaseColor = "#fab387";
+      } else if (proHour >= 20 || proHour < 0) {
+        phase = "Noite 🌙";
+        nextPhaseHour = 0;
+        phaseColor = "#cba6f7";
       } else {
-        // Padrão de contingência zerado até o primeiro alinhamento
-        tempoAncoraReal = new Date();
-        minutosAncoraPoke = 0;
-        inicializado = true;
-      }
-    }
-
-    function calibrarManual() {
-      const entrada = prompt("Digite a hora EXATA que você vê agora no jogo (HH:MM):", "12:00");
-      if (entrada) {
-        const partes = entrada.split(':');
-        if (partes.length === 2) {
-          const h = parseInt(partes[0], 10);
-          const m = parseInt(partes[1], 10);
-          if (!isNaN(h) && !isNaN(m) && h >= 0 && h < 24 && m >= 0 && m < 60) {
-            tempoAncoraReal = new Date();
-            minutosAncoraPoke = h * 60 + m;
-            localStorage.setItem('pro_real_anchor', tempoAncoraReal.getTime());
-            localStorage.setItem('pro_poke_min', minutosAncoraPoke);
-            alert("Relógio calibrado com sucesso!");
-          }
-        }
-      }
-    }
-
-    function obterDadosFase(horaPoke) {
-      if (horaPoke >= 4 && horaPoke < 10) {
-        return { nome: "Manhã 🌅", cor: "#f9e2af", proximaHora: 10 };
-      } else if (horaPoke >= 10 && horaPoke < 20) {
-        return { nome: "Dia / Tarde ☀️", cor: "#fab387", proximaHora: 20 };
-      } else {
-        return { nome: "Noite 🌙", cor: "#cba6f7", proximaHora: 4 };
-      }
-    }
-
-    function atualizarRelogio() {
-      const agora = new Date();
-      document.getElementById('localClock').textContent = `Horário Local: ${agora.toLocaleTimeString()}`;
-
-      if (inicializado) {
-        const segundosReaisPassados = (agora - tempoAncoraReal) / 1000;
-        const segundosPokePassados = segundosReaisPassados * 5;
-
-        const totalSegundosPoke = ((minutosAncoraPoke * 60 + segundosPokePassados) % (24 * 3600) + (24 * 3600)) % (24 * 3600);
-
-        const horaPoke = Math.floor(totalSegundosPoke / 3600);
-        const minutoPoke = Math.floor((totalSegundosPoke % 3600) / 60);
-        const segundoPoke = Math.floor(totalSegundosPoke % 60);
-
-        // Digital
-        document.getElementById('pokeClock').textContent = 
-          `${String(horaPoke).padStart(2, '0')}:${String(minutoPoke).padStart(2, '0')}:${String(segundoPoke).padStart(2, '0')}`;
-
-        // Analógico
-        const anguloHoras = (horaPoke + minutoPoke / 60 + segundoPoke / 3600) * 15;
-        const anguloMinutos = (minutoPoke + segundoPoke / 60) * 6;
-        const anguloSegundos = segundoPoke * 6;
-
-        document.getElementById('hourHand').style.transform = `rotate(${anguloHoras}deg)`;
-        document.getElementById('minuteHand').style.transform = `rotate(${anguloMinutos}deg)`;
-        document.getElementById('secondHand').style.transform = `rotate(${anguloSegundos}deg)`;
-
-        // Fase
-        const fase = obterDadosFase(horaPoke);
-        const badge = document.getElementById('phaseBadge');
-        badge.textContent = fase.nome;
-        badge.style.color = fase.cor;
-
-        // Regressiva
-        let segundosAlvoPoke = fase.proximaHora * 3600;
-        if (segundosAlvoPoke <= totalSegundosPoke) {
-          segundosAlvoPoke += 24 * 3600;
-        }
-
-        const segundosPokeRestantes = segundosAlvoPoke - totalSegundosPoke;
-        const segundosReaisRestantes = Math.floor(segundosPokeRestantes / 5);
-
-        const minReais = Math.floor(segundosReaisRestantes / 60);
-        const segReais = segundosReaisRestantes % 60;
-
-        document.getElementById('countdown').textContent = 
-          `Próxima fase em (real): ${String(minReais).padStart(2, '0')}m ${String(segReais).padStart(2, '0')}s`;
+        phase = "Madrugada 🌌";
+        nextPhaseHour = 4;
+        phaseColor = "#fd79a8";
       }
 
-      setTimeout(atualizarRelogio, 200);
+      const badge = document.getElementById("phaseBadge");
+      badge.textContent = phase;
+      badge.style.color = phaseColor;
+
+      // Tempo real restante até a próxima fase (1 min de jogo = 12 seg reais)
+      const currentMinutes = proHour * 60 + proMinute;
+      let nextPhaseMinutes = nextPhaseHour * 60;
+      if (nextPhaseMinutes <= currentMinutes) nextPhaseMinutes += 1440;
+
+      const untilNextPhase = nextPhaseMinutes - currentMinutes;
+      const realNextPhaseSeconds = untilNextPhase * 12;
+
+      const hrNext = Math.floor(realNextPhaseSeconds / 3600);
+      const minNext = Math.floor((realNextPhaseSeconds % 3600) / 60);
+
+      document.getElementById("untilNextPhase").textContent = 
+        `Próxima fase em (real): ${hrNext}h ${minNext}m`;
     }
 
-    carregarAnchor();
-    atualizarRelogio();
+    updateTime();
+    setInterval(updateTime, 200);
   </script>
 </body>
 </html>
