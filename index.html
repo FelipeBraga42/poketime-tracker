@@ -67,65 +67,64 @@
       border: 6px solid #313244;
       box-shadow: 0 4px 15px rgba(0,0,0,0.5);
       margin-bottom: 16px;
-      overflow: hidden;
-      background: #11111b;
+      
+      /* Mostrador 24 Horas */
+      background: conic-gradient(
+        #121838 0deg 60deg,      /* Noite (00:00 - 04:00) */
+        #b8860b 60deg 210deg,   /* Manhã (04:00 - 14:00) */
+        #d4af37 210deg 300deg,  /* Tarde (14:00 - 20:00) */
+        #121838 300deg 360deg   /* Noite (20:00 - 00:00) */
+      );
     }
 
-    .clock-dial {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      transform: rotate(-90deg); /* 00:00 no topo */
-    }
-
-    /* Rótulos dos Horários no Mostrador */
+    /* Rótulos dos Horários */
     .hour-label {
       position: absolute;
       font-size: 0.7rem;
       font-weight: bold;
       color: #ffffff;
-      text-shadow: 1px 1px 2px #000;
+      text-shadow: 1px 1px 3px #000;
       z-index: 2;
     }
     .label-0 { top: 8px; left: 50%; transform: translateX(-50%); color: #a6adc8; }
-    .label-4 { top: 50px; right: 20px; color: #f9e2af; }
+    .label-4 { top: 45px; right: 22px; color: #f9e2af; }
     .label-14 { bottom: 35px; right: 35px; color: #fab387; }
     .label-20 { bottom: 35px; left: 35px; color: #cba6f7; }
 
-    /* Estilo dos Ponteiros */
+    /* Base dos Ponteiros */
     .hand {
       position: absolute;
       bottom: 50%;
       left: 50%;
       transform-origin: bottom center;
       border-radius: 4px;
+    }
+
+    /* Ponteiro das HORAS (Menor - Bege) */
+    .hour-hand {
+      width: 6px;
+      height: 48px;
+      background-color: #f5e0dc;
+      margin-left: -3px;
       z-index: 3;
     }
 
-    /* Ponteiro das Horas (Bege) - Circula 360° em 24h (15°/h) */
-    .hour-hand {
-      width: 6px;
-      height: 55px;
-      background-color: #f5e0dc;
-      margin-left: -3px;
-    }
-
-    /* Ponteiro dos Minutos (Azul) - Circula 360° em 60m (6°/m) */
+    /* Ponteiro dos MINUTOS (Maior - Azul) */
     .minute-hand {
       width: 4px;
-      height: 75px;
+      height: 78px;
       background-color: var(--accent);
       margin-left: -2px;
+      z-index: 4;
     }
 
-    /* Ponteiro dos Segundos (Rosa) - Circula 360° em 60s (6°/s) */
+    /* Ponteiro dos SEGUNDOS (Fino - Rosa) */
     .second-hand {
       width: 2px;
-      height: 85px;
+      height: 88px;
       background-color: var(--red);
       margin-left: -1px;
+      z-index: 5;
     }
 
     .center-dot {
@@ -137,7 +136,7 @@
       background-color: #cdd6f4;
       border-radius: 50%;
       transform: translate(-50%, -50%);
-      z-index: 4;
+      z-index: 6;
       box-shadow: 0 0 4px rgba(0,0,0,0.8);
     }
 
@@ -181,17 +180,6 @@
 
     <!-- Relógio Analógico 24h -->
     <div class="analog-clock">
-      <svg class="clock-dial" viewBox="0 0 100 100">
-        <!-- Manhã (04:00 às 14:00) -> 60° a 210° (Amarelo Escuro) -->
-        <path d="M 50 50 L 75 6.7 A 50 50 0 0 1 6.7 75 Z" fill="#b8860b" />
-        
-        <!-- Tarde (14:00 às 20:00) -> 210° a 300° (Amarelo Claro) -->
-        <path d="M 50 50 L 6.7 75 A 50 50 0 0 1 25 6.7 Z" fill="#d4af37" />
-        
-        <!-- Noite (20:00 às 04:00) -> 300° a 60° (Azul Escuro) -->
-        <path d="M 50 50 L 25 6.7 A 50 50 0 1 1 75 6.7 Z" fill="#121838" />
-      </svg>
-
       <div class="hour-label label-0">00:00</div>
       <div class="hour-label label-4">04:00</div>
       <div class="hour-label label-14">14:00</div>
@@ -212,46 +200,47 @@
   </div>
 
   <script>
-    // Âncora Universal Sincronizada (UTC)
-    const anchorReal = new Date("2025-05-29T21:00:00Z");
+    // Âncora Sincronizada UTC
+    const anchorReal = new Date("2025-05-29T21:00:00Z").getTime();
     const anchorProMinutes = 9 * 60; // 09:00 PRO
 
     function updateTime() {
       const now = new Date();
       document.getElementById('localClock').textContent = `Horário Local: ${now.toLocaleTimeString()}`;
 
-      // Cálculo de tempo do jogo
-      const elapsedRealSeconds = (now - anchorReal) / 1000;
+      // Tempo decorrido
+      const elapsedRealSeconds = (now.getTime() - anchorReal) / 1000;
       const elapsedProSeconds = elapsedRealSeconds * 5;
       const totalProMinutes = anchorProMinutes + (elapsedProSeconds / 60);
-      
-      const proHour = Math.floor((totalProMinutes / 60) % 24);
-      const proMinute = Math.floor(totalProMinutes % 60);
+
+      // Normalização em 24h (1440 min)
+      let proMinutesInDay = totalProMinutes % 1440;
+      if (proMinutesInDay < 0) proMinutesInDay += 1440;
+
+      const proHour = Math.floor(proMinutesInDay / 60);
+      const proMinute = Math.floor(proMinutesInDay % 60);
       const proSecond = Math.floor(elapsedProSeconds % 60);
 
       // Atualiza o relógio digital
       const pad = (n) => String(n).padStart(2, '0');
       document.getElementById("pokeClock").textContent = `${pad(proHour)}:${pad(proMinute)}:${pad(proSecond)}`;
 
-      // --- CÁLCULO DE ÂNGULOS DOS PONTEIROS ---
-      // 1. Hora: Num relógio de 24 horas, cada hora equivale a 15 graus (360° / 24h)
-      const exactProHour = (totalProMinutes / 60) % 24;
-      const anguloHoras = exactProHour * 15;
+      // --- CÁLCULO EXATO DOS ÂNGULOS ---
+      // 1. HORAS (Ponteiro Menor): 24h em 360° -> 15° por hora (0.25° por minuto do dia)
+      const anguloHoras = proMinutesInDay * 0.25;
 
-      // 2. Minuto: Cada minuto equivale a 6 graus (360° / 60m)
-      const exactProMinute = totalProMinutes % 60;
-      const anguloMinutos = exactProMinute * 6;
+      // 2. MINUTOS (Ponteiro Maior): 60m em 360° -> 6° por minuto
+      const anguloMinutos = (proMinute + proSecond / 60) * 6;
 
-      // 3. Segundo: Cada segundo equivale a 6 graus (360° / 60s)
-      const exactProSecond = elapsedProSeconds % 60;
-      const anguloSegundos = exactProSecond * 6;
+      // 3. SEGUNDOS: 60s em 360° -> 6° por segundo
+      const anguloSegundos = (proSecond) * 6;
 
-      // Aplicação dos ângulos
+      // Aplicação nos elementos corretos
       document.getElementById('hourHand').style.transform = `rotate(${anguloHoras}deg)`;
       document.getElementById('minuteHand').style.transform = `rotate(${anguloMinutos}deg)`;
       document.getElementById('secondHand').style.transform = `rotate(${anguloSegundos}deg)`;
 
-      // Determinação das Fases (04:00-14:00 | 14:00-20:00 | 20:00-04:00)
+      // Determinar Fases do Dia
       let phase, nextPhaseHour, phaseColor;
 
       if (proHour >= 4 && proHour < 14) {
@@ -272,7 +261,7 @@
       badge.textContent = phase;
       badge.style.color = phaseColor;
 
-      // Tempo restante para a próxima fase (1 min no jogo = 12 seg reais)
+      // Contagem decrescente
       const currentMinutes = proHour * 60 + proMinute;
       let nextPhaseMinutes = nextPhaseHour * 60;
       if (nextPhaseMinutes <= currentMinutes) nextPhaseMinutes += 1440;
