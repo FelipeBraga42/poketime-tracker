@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PRO PokéTime Tracker</title>
+  <style>
+    :root {
+      --bg: #181825;
+      --card-bg: #1e1e2e;
+      --input-bg: #313244;
+      --text: #cdd6f4;
+      --subtext: #a6adc8;
+      --accent: #89b4fa;
+      --green: #a6e3a1;
+      --red: #f38ba8;
+      --yellow: #f9e2af;
+      --orange: #fab387;
+      --purple: #cba6f7;
+      --teal: #94e2d5;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Consolas', 'Courier New', monospace;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      padding: 24px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      text-align: center;
+      border: 1px solid #313244;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      color: var(--accent);
+      margin-bottom: 16px;
+    }
+
+    .sync-box {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 16px;
+      background: #11111b;
+      padding: 10px;
+      border-radius: 8px;
+    }
+
+    .sync-box label {
+      font-size: 0.8rem;
+      color: var(--subtext);
+    }
+
+    input[type="text"] {
+      width: 70px;
+      padding: 6px;
+      border-radius: 6px;
+      border: 1px solid #45475a;
+      background-color: var(--input-bg);
+      color: var(--text);
+      text-align: center;
+      font-weight: bold;
+    }
+
+    button {
+      padding: 6px 12px;
+      border-radius: 6px;
+      border: none;
+      background-color: var(--green);
+      color: #11111b;
+      font-weight: bold;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    .local-clock {
+      font-size: 0.85rem;
+      color: var(--subtext);
+      margin-bottom: 16px;
+    }
+
+    .poke-title {
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      color: var(--subtext);
+      text-transform: uppercase;
+    }
+
+    .poke-clock {
+      font-size: 2.4rem;
+      font-weight: bold;
+      color: var(--yellow);
+      margin: 4px 0;
+    }
+
+    .phase-badge {
+      font-size: 1.1rem;
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+
+    .countdown {
+      font-size: 0.85rem;
+      color: var(--teal);
+      background: rgba(148, 226, 213, 0.1);
+      padding: 8px;
+      border-radius: 6px;
+      border: 1px solid rgba(148, 226, 213, 0.2);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>PRO PokéTime Sync</h1>
+
+    <div class="sync-box">
+      <label for="pokeInput">Hora PRO:</label>
+      <input type="text" id="pokeInput" value="00:00" placeholder="HH:MM" />
+      <button onclick="sincronizar()">Sync</button>
+    </div>
+
+    <div class="local-clock" id="localClock">Local (RJ): --:--:--</div>
+
+    <div class="poke-title">PokéTime</div>
+    <div class="poke-clock" id="pokeClock">--:--:--</div>
+    <div class="phase-badge" id="phaseBadge">Aguardando sincronização...</div>
+
+    <div class="countdown" id="countdown">Próxima fase em: --:--</div>
+  </div>
+
+  <script>
+    let tempoAncoraReal = null;
+    let minutosAncoraPoke = null;
+    let sincronizado = false;
+
+    function sincronizar() {
+      const input = document.getElementById('pokeInput').value.trim();
+      const partes = input.split(':');
+
+      if (partes.length === 2) {
+        const hora = parseInt(partes[0], 10);
+        const minuto = parseInt(partes[1], 10);
+
+        if (!isNaN(hora) && !isNaN(minuto) && hora >= 0 && hora < 24 && minuto >= 0 && minuto < 60) {
+          tempoAncoraReal = new Date();
+          minutosAncoraPoke = hora * 60 + minuto;
+          sincronizado = true;
+          return;
+        }
+      }
+
+      const badge = document.getElementById('phaseBadge');
+      badge.textContent = "Formato inválido! (HH:MM)";
+      badge.style.color = "var(--red)";
+    }
+
+    function obterDadosFase(horaPoke) {
+      if (horaPoke >= 4 && horaPoke < 10) {
+        return { nome: "Manhã 🌅", cor: "var(--yellow)", proximaHora: 10 };
+      } else if (horaPoke >= 10 && horaPoke < 20) {
+        return { nome: "Tarde ☀️", cor: "var(--orange)", proximaHora: 20 };
+      } else {
+        return { nome: "Noite 🌙", cor: "var(--purple)", proximaHora: 4 };
+      }
+    }
+
+    function atualizarRelogio() {
+      const agora = new Date();
+      
+      // Relógio Local
+      document.getElementById('localClock').textContent = 
+        `Local (RJ): ${agora.toLocaleTimeString('pt-BR')}`;
+
+      if (sincronizado) {
+        // Cálculo do tempo decorrido no jogo (5x mais rápido)
+        const segundosReaisPassados = (agora - tempoAncoraReal) / 1000;
+        const segundosPokePassados = segundosReaisPassados * 5;
+
+        const totalSegundosPoke = (minutosAncoraPoke * 60 + segundosPokePassados) % (24 * 3600);
+
+        const horaPoke = Math.floor(totalSegundosPoke / 3600);
+        const minutoPoke = Math.floor((totalSegundosPoke % 3600) / 60);
+        const segundoPoke = Math.floor(totalSegundosPoke % 60);
+
+        // Formatação HH:MM:SS
+        const hStr = String(horaPoke).padStart(2, '0');
+        const mStr = String(minutoPoke).padStart(2, '0');
+        const sStr = String(segundoPoke).padStart(2, '0');
+        
+        document.getElementById('pokeClock').textContent = `${hStr}:${mStr}:${sStr}`;
+
+        // Fase do Dia
+        const fase = obterDadosFase(horaPoke);
+        const badge = document.getElementById('phaseBadge');
+        badge.textContent = fase.nome;
+        badge.style.color = fase.cor;
+
+        // Regressiva (Tempo Real)
+        let segundosAlvoPoke = fase.proximaHora * 3600;
+        if (segundosAlvoPoke <= totalSegundosPoke) {
+          segundosAlvoPoke += 24 * 3600;
+        }
+
+        const segundosPokeRestantes = segundosAlvoPoke - totalSegundosPoke;
+        const segundosReaisRestantes = Math.floor(segundosPokeRestantes / 5);
+
+        const minReais = Math.floor(segundosReaisRestantes / 60);
+        const segReais = segundosReaisRestantes % 60;
+
+        const mRStr = String(minReais).padStart(2, '0');
+        const sRStr = String(segReais).padStart(2, '0');
+
+        document.getElementById('countdown').textContent = 
+          `Próxima fase em (real): ${mRStr}m ${sRStr}s`;
+      }
+
+      setTimeout(atualizarRelogio, 1000);
+    }
+
+    // Inicia a contagem
+    atualizarRelogio();
+  </script>
+</body>
+</html>
