@@ -11,29 +11,211 @@
       --text: #cdd6f4;
       --subtext: #a6adc8;
       --accent: #89b4fa;
-      --yellow: #f9e2af;
-      --orange: #fab387;
-      --purple: #cba6f7;
+      --morning: #d9a036;
+      --day: #e6c619;
+      --night: #1b265d;
       --teal: #94e2d5;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Consolas', 'Courier New', monospace; }
-    body { background-color: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
-    .container { background-color: var(--card-bg); border-radius: 12px; padding: 24px; width: 100%; max-width: 380px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); text-align: center; border: 1px solid #313244; }
-    h1 { font-size: 1.4rem; color: var(--accent); margin-bottom: 16px; }
-    .local-clock { font-size: 0.85rem; color: var(--subtext); margin-bottom: 16px; }
-    .poke-title { font-size: 0.75rem; letter-spacing: 2px; color: var(--subtext); text-transform: uppercase; }
-    .poke-clock { font-size: 2.4rem; font-weight: bold; color: var(--yellow); margin: 4px 0; }
-    .phase-badge { font-size: 1.1rem; font-weight: bold; margin-bottom: 12px; }
-    .countdown { font-size: 0.85rem; color: var(--teal); background: rgba(148, 226, 213, 0.1); padding: 8px; border-radius: 6px; border: 1px solid rgba(148, 226, 213, 0.2); }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Consolas', 'Courier New', monospace;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      background-color: var(--card-bg);
+      border-radius: 16px;
+      padding: 24px;
+      width: 100%;
+      max-width: 380px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+      text-align: center;
+      border: 1px solid #313244;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      font-size: 1.4rem;
+      color: var(--accent);
+      margin-bottom: 6px;
+    }
+
+    .local-clock {
+      font-size: 0.85rem;
+      color: var(--subtext);
+      margin-bottom: 16px;
+    }
+
+    /* --- ESTILO DO RELÓGIO ANALÓGICO --- */
+    .analog-clock {
+      position: relative;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      border: 6px solid #313244;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      margin-bottom: 16px;
+      overflow: hidden;
+      background: #11111b;
+    }
+
+    /* SVG de fundo dividido nas 3 fases idênticas à imagem */
+    .clock-dial {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg); /* Ajusta 0 radianos para o topo */
+    }
+
+    /* Ícones do Sol e Lua sobre o mostrador */
+    .clock-icon {
+      position: absolute;
+      font-size: 1.1rem;
+      z-index: 2;
+      user-select: none;
+    }
+    .icon-top { top: 6px; left: 50%; transform: translateX(-50%); } /* 10:00 */
+    .icon-left { bottom: 50px; left: 10px; } /* 04:00 */
+    .icon-right { bottom: 50px; right: 10px; } /* 20:00 */
+
+    /* Marcadores das horas (labels) */
+    .hour-label {
+      position: absolute;
+      font-size: 0.7rem;
+      font-weight: bold;
+      color: #ffffff;
+      text-shadow: 1px 1px 2px #000;
+      z-index: 2;
+    }
+    .label-4 { bottom: 35px; left: 40px; color: #ff6b6b; }
+    .label-10 { top: 25px; left: 50%; transform: translateX(-50%); color: #ff6b6b; }
+    .label-20 { bottom: 35px; right: 35px; color: #ff6b6b; }
+
+    /* Ponteiros */
+    .hand {
+      position: absolute;
+      bottom: 50%;
+      left: 50%;
+      transform-origin: bottom center;
+      border-radius: 4px;
+      z-index: 3;
+      transition: transform 0.05s linear;
+    }
+
+    .hour-hand {
+      width: 6px;
+      height: 55px;
+      background-color: #f5e0dc;
+      margin-left: -3px;
+    }
+
+    .minute-hand {
+      width: 4px;
+      height: 75px;
+      background-color: var(--accent);
+      margin-left: -2px;
+    }
+
+    .second-hand {
+      width: 2px;
+      height: 85px;
+      background-color: #f38ba8;
+      margin-left: -1px;
+    }
+
+    .center-dot {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 12px;
+      height: 12px;
+      background-color: #cdd6f4;
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 4;
+      box-shadow: 0 0 4px rgba(0,0,0,0.8);
+    }
+
+    /* --- ESTILO DO RELÓGIO DIGITAL --- */
+    .poke-title {
+      font-size: 0.75rem;
+      letter-spacing: 2px;
+      color: var(--subtext);
+      text-transform: uppercase;
+    }
+
+    .poke-clock {
+      font-size: 2.2rem;
+      font-weight: bold;
+      color: #f9e2af;
+      margin: 2px 0;
+    }
+
+    .phase-badge {
+      font-size: 1.05rem;
+      font-weight: bold;
+      margin-bottom: 12px;
+    }
+
+    .countdown {
+      width: 100%;
+      font-size: 0.85rem;
+      color: var(--teal);
+      background: rgba(148, 226, 213, 0.1);
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(148, 226, 213, 0.2);
+    }
   </style>
 </head>
 <body>
 
   <div class="container">
-    <h1>PRO PokéTime Sync</h1>
-    <div class="local-clock" id="localClock">Local (RJ): --:--:--</div>
+    <h1>PRO PokéTime Tracker</h1>
+    <div class="local-clock" id="localClock">Horário Local: --:--:--</div>
 
+    <!-- Relógio Analógico Dividido em Três Fases -->
+    <div class="analog-clock">
+      <svg class="clock-dial" viewBox="0 0 100 100">
+        <!-- Manhã (04:00 às 10:00 -> 60° a 150°) -->
+        <path d="M 50 50 L 25 93.3 A 50 50 0 0 1 6.7 25 Z" fill="#b8860b" />
+        <!-- Tarde (10:00 às 20:00 -> 150° a 300°) -->
+        <path d="M 50 50 L 6.7 25 A 50 50 0 0 1 93.3 25 Z" fill="#d4af37" />
+        <!-- Noite (20:00 às 04:00 -> 300° a 60°) -->
+        <path d="M 50 50 L 93.3 25 A 50 50 0 1 1 25 93.3 Z" fill="#121838" />
+      </svg>
+
+      <div class="clock-icon icon-top">☀️</div>
+      <div class="clock-icon icon-left">🌅</div>
+      <div class="clock-icon icon-right">🌙</div>
+
+      <div class="hour-label label-10">10:00</div>
+      <div class="hour-label label-4">4:00</div>
+      <div class="hour-label label-20">20:00</div>
+
+      <div class="hand hour-hand" id="hourHand"></div>
+      <div class="hand minute-hand" id="minuteHand"></div>
+      <div class="hand second-hand" id="secondHand"></div>
+      <div class="center-dot"></div>
+    </div>
+
+    <!-- Relógio Digital -->
     <div class="poke-title">PokéTime</div>
     <div class="poke-clock" id="pokeClock">--:--:--</div>
     <div class="phase-badge" id="phaseBadge">Carregando...</div>
@@ -42,52 +224,62 @@
   </div>
 
   <script>
-    // Ponto de referência zero (Epoch) do servidor do PRO em milissegundos
-    // (Data histórica em UTC onde o Pokétime marcou exatamente 00:00:00)
-    const PRO_EPOCH_MS = 1443657600000; 
+    // Offset UTC do Marco Zero (00:00:00 no jogo) derivado da sua descoberta
+    // 17:00 EST (22:00 UTC) = 09:00 AM no PRO -> Marco zero UTC = 20:12 UTC
+    const MARCO_ZERO_UTC_MS = Date.UTC(2024, 0, 1, 20, 12, 0);
 
     function obterDadosFase(horaPoke) {
       if (horaPoke >= 4 && horaPoke < 10) {
-        return { nome: "Manhã 🌅", cor: "var(--yellow)", proximaHora: 10 };
+        return { nome: "Manhã 🌅", cor: "#f9e2af", proximaHora: 10 };
       } else if (horaPoke >= 10 && horaPoke < 20) {
-        return { nome: "Tarde ☀️", cor: "var(--orange)", proximaHora: 20 };
+        return { nome: "Tarde ☀️", cor: "#fab387", proximaHora: 20 };
       } else {
-        return { nome: "Noite 🌙", cor: "var(--purple)", proximaHora: 4 };
+        return { nome: "Noite 🌙", cor: "#cba6f7", proximaHora: 4 };
       }
     }
 
     function atualizarRelogio() {
       const agora = new Date();
       
-      // Relógio Local
+      // Relógio Local do Usuário (se ajusta automaticamente ao fuso do computador/celular)
       document.getElementById('localClock').textContent = 
-        `Local (RJ): ${agora.toLocaleTimeString('pt-BR')}`;
+        `Horário Local: ${agora.toLocaleTimeString()}`;
 
-      // Cálculo do tempo total decorrido desde o ponto zero (5x mais rápido)
-      const msPassados = agora.getTime() - PRO_EPOCH_MS;
+      // Cálculo do tempo desde o marco zero global
+      const msPassados = agora.getTime() - MARCO_ZERO_UTC_MS;
       const segundosReais = msPassados / 1000;
       const segundosPoke = segundosReais * 5;
 
-      const totalSegundosDiaPoke = (segundosPoke) % (24 * 3600);
+      const totalSegundosDiaPoke = ((segundosPoke % (24 * 3600)) + (24 * 3600)) % (24 * 3600);
 
       const horaPoke = Math.floor(totalSegundosDiaPoke / 3600);
       const minutoPoke = Math.floor((totalSegundosDiaPoke % 3600) / 60);
       const segundoPoke = Math.floor(totalSegundosDiaPoke % 60);
 
-      // Exibição HH:MM:SS
+      // --- RELÓGIO DIGITAL ---
       const hStr = String(horaPoke).padStart(2, '0');
       const mStr = String(minutoPoke).padStart(2, '0');
       const sStr = String(segundoPoke).padStart(2, '0');
       
       document.getElementById('pokeClock').textContent = `${hStr}:${mStr}:${sStr}`;
 
-      // Fase do Dia
+      // --- RELÓGIO ANALÓGICO (PONTEIROS) ---
+      // Converte hora/minuto/segundo em ângulos (360 graus / 24 horas = 15 graus por hora)
+      const anguloHoras = (horaPoke + minutoPoke / 60 + segundoPoke / 3600) * 15;
+      const anguloMinutos = (minutoPoke + segundoPoke / 60) * 6; // 360 deg / 60 min
+      const anguloSegundos = segundoPoke * 6;                   // 360 deg / 60 seg
+
+      document.getElementById('hourHand').style.transform = `rotate(${anguloHoras}deg)`;
+      document.getElementById('minuteHand').style.transform = `rotate(${anguloMinutos}deg)`;
+      document.getElementById('secondHand').style.transform = `rotate(${anguloSegundos}deg)`;
+
+      // --- FASE DO DIA ---
       const fase = obterDadosFase(horaPoke);
       const badge = document.getElementById('phaseBadge');
       badge.textContent = fase.nome;
       badge.style.color = fase.cor;
 
-      // Regressiva
+      // --- CONTADOR REGRESSIVO ---
       let segundosAlvoPoke = fase.proximaHora * 3600;
       if (segundosAlvoPoke <= totalSegundosDiaPoke) {
         segundosAlvoPoke += 24 * 3600;
@@ -105,7 +297,7 @@
       document.getElementById('countdown').textContent = 
         `Próxima fase em (real): ${mRStr}m ${sRStr}s`;
 
-      setTimeout(atualizarRelogio, 1000);
+      setTimeout(atualizarRelogio, 200); // Atualização mais fluida para o ponteiro dos segundos
     }
 
     atualizarRelogio();
