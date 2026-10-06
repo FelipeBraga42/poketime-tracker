@@ -11,9 +11,9 @@
       --text: #cdd6f4;
       --subtext: #a6adc8;
       --accent: #89b4fa;
-      --morning: #d9a036;
-      --day: #e6c619;
-      --night: #1b265d;
+      --morning: #b8860b;
+      --day: #d4af37;
+      --night: #121838;
       --teal: #94e2d5;
     }
 
@@ -60,7 +60,7 @@
       margin-bottom: 16px;
     }
 
-    /* --- ESTILO DO RELÓGIO ANALÓGICO --- */
+    /* --- RELÓGIO ANALÓGICO 24H --- */
     .analog-clock {
       position: relative;
       width: 220px;
@@ -73,28 +73,17 @@
       background: #11111b;
     }
 
-    /* SVG de fundo dividido nas 3 fases idênticas à imagem */
+    /* SVG do mostrador com fatias proporcionais a um relógio de 24h */
     .clock-dial {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      transform: rotate(-90deg); /* Ajusta 0 radianos para o topo */
+      transform: rotate(-90deg); /* Faz o 0° ficar no topo (00:00/24:00) */
     }
 
-    /* Ícones do Sol e Lua sobre o mostrador */
-    .clock-icon {
-      position: absolute;
-      font-size: 1.1rem;
-      z-index: 2;
-      user-select: none;
-    }
-    .icon-top { top: 6px; left: 50%; transform: translateX(-50%); } /* 10:00 */
-    .icon-left { bottom: 50px; left: 10px; } /* 04:00 */
-    .icon-right { bottom: 50px; right: 10px; } /* 20:00 */
-
-    /* Marcadores das horas (labels) */
+    /* Rótulos das horas nos pontos de transição exatos */
     .hour-label {
       position: absolute;
       font-size: 0.7rem;
@@ -103,9 +92,10 @@
       text-shadow: 1px 1px 2px #000;
       z-index: 2;
     }
-    .label-4 { bottom: 35px; left: 40px; color: #ff6b6b; }
-    .label-10 { top: 25px; left: 50%; transform: translateX(-50%); color: #ff6b6b; }
-    .label-20 { bottom: 35px; right: 35px; color: #ff6b6b; }
+    .label-0 { top: 8px; left: 50%; transform: translateX(-50%); color: #a6adc8; }
+    .label-4 { top: 60px; right: 18px; color: #f9e2af; }
+    .label-10 { bottom: 25px; right: 45px; color: #fab387; }
+    .label-20 { bottom: 25px; left: 45px; color: #cba6f7; }
 
     /* Ponteiros */
     .hand {
@@ -152,7 +142,7 @@
       box-shadow: 0 0 4px rgba(0,0,0,0.8);
     }
 
-    /* --- ESTILO DO RELÓGIO DIGITAL --- */
+    /* --- RELÓGIO DIGITAL --- */
     .poke-title {
       font-size: 0.75rem;
       letter-spacing: 2px;
@@ -190,23 +180,21 @@
     <h1>PRO PokéTime Tracker</h1>
     <div class="local-clock" id="localClock">Horário Local: --:--:--</div>
 
-    <!-- Relógio Analógico Dividido em Três Fases -->
+    <!-- Relógio Analógico Proporcional às 24 Horas -->
     <div class="analog-clock">
       <svg class="clock-dial" viewBox="0 0 100 100">
-        <!-- Manhã (04:00 às 10:00 -> 60° a 150°) -->
-        <path d="M 50 50 L 25 93.3 A 50 50 0 0 1 6.7 25 Z" fill="#b8860b" />
-        <!-- Tarde (10:00 às 20:00 -> 150° a 300°) -->
-        <path d="M 50 50 L 6.7 25 A 50 50 0 0 1 93.3 25 Z" fill="#d4af37" />
-        <!-- Noite (20:00 às 04:00 -> 300° a 60°) -->
-        <path d="M 50 50 L 93.3 25 A 50 50 0 1 1 25 93.3 Z" fill="#121838" />
+        <!-- Manhã (04:00 às 10:00) -> 60° a 150° -->
+        <path d="M 50 50 L 75 93.3 A 50 50 0 0 1 6.7 75 Z" fill="#b8860b" />
+        <!-- Dia/Tarde (10:00 às 20:00) -> 150° a 300° -->
+        <path d="M 50 50 L 6.7 75 A 50 50 0 0 1 6.7 25 Z" fill="#d4af37" />
+        <!-- Noite (20:00 às 04:00) -> 300° a 60° -->
+        <path d="M 50 50 L 6.7 25 A 50 50 0 1 1 75 93.3 Z" fill="#121838" />
       </svg>
 
-      <div class="clock-icon icon-top">☀️</div>
-      <div class="clock-icon icon-left">🌅</div>
-      <div class="clock-icon icon-right">🌙</div>
-
+      <!-- Marcadores de horas do relógio no mostrador -->
+      <div class="hour-label label-0">00:00</div>
+      <div class="hour-label label-4">04:00</div>
       <div class="hour-label label-10">10:00</div>
-      <div class="hour-label label-4">4:00</div>
       <div class="hour-label label-20">20:00</div>
 
       <div class="hand hour-hand" id="hourHand"></div>
@@ -224,15 +212,14 @@
   </div>
 
   <script>
-    // Offset UTC do Marco Zero (00:00:00 no jogo) derivado da sua descoberta
-    // 17:00 EST (22:00 UTC) = 09:00 AM no PRO -> Marco zero UTC = 20:12 UTC
+    // Marco zero UTC calculado com base na sua descoberta (17:00 EST = 09:00 PRO)
     const MARCO_ZERO_UTC_MS = Date.UTC(2024, 0, 1, 20, 12, 0);
 
     function obterDadosFase(horaPoke) {
       if (horaPoke >= 4 && horaPoke < 10) {
         return { nome: "Manhã 🌅", cor: "#f9e2af", proximaHora: 10 };
       } else if (horaPoke >= 10 && horaPoke < 20) {
-        return { nome: "Tarde ☀️", cor: "#fab387", proximaHora: 20 };
+        return { nome: "Dia / Tarde ☀️", cor: "#fab387", proximaHora: 20 };
       } else {
         return { nome: "Noite 🌙", cor: "#cba6f7", proximaHora: 4 };
       }
@@ -241,11 +228,11 @@
     function atualizarRelogio() {
       const agora = new Date();
       
-      // Relógio Local do Usuário (se ajusta automaticamente ao fuso do computador/celular)
+      // Exibe horário local no fuso do dispositivo do usuário
       document.getElementById('localClock').textContent = 
         `Horário Local: ${agora.toLocaleTimeString()}`;
 
-      // Cálculo do tempo desde o marco zero global
+      // Cálculo de tempo real para tempo do PRO (5x mais rápido)
       const msPassados = agora.getTime() - MARCO_ZERO_UTC_MS;
       const segundosReais = msPassados / 1000;
       const segundosPoke = segundosReais * 5;
@@ -256,30 +243,29 @@
       const minutoPoke = Math.floor((totalSegundosDiaPoke % 3600) / 60);
       const segundoPoke = Math.floor(totalSegundosDiaPoke % 60);
 
-      // --- RELÓGIO DIGITAL ---
+      // Digital HH:MM:SS
       const hStr = String(horaPoke).padStart(2, '0');
       const mStr = String(minutoPoke).padStart(2, '0');
       const sStr = String(segundoPoke).padStart(2, '0');
       
       document.getElementById('pokeClock').textContent = `${hStr}:${mStr}:${sStr}`;
 
-      // --- RELÓGIO ANALÓGICO (PONTEIROS) ---
-      // Converte hora/minuto/segundo em ângulos (360 graus / 24 horas = 15 graus por hora)
+      // Analógico (360° / 24 horas = 15° por hora no mostrador)
       const anguloHoras = (horaPoke + minutoPoke / 60 + segundoPoke / 3600) * 15;
-      const anguloMinutos = (minutoPoke + segundoPoke / 60) * 6; // 360 deg / 60 min
-      const anguloSegundos = segundoPoke * 6;                   // 360 deg / 60 seg
+      const anguloMinutos = (minutoPoke + segundoPoke / 60) * 6;
+      const anguloSegundos = segundoPoke * 6;
 
       document.getElementById('hourHand').style.transform = `rotate(${anguloHoras}deg)`;
       document.getElementById('minuteHand').style.transform = `rotate(${anguloMinutos}deg)`;
       document.getElementById('secondHand').style.transform = `rotate(${anguloSegundos}deg)`;
 
-      // --- FASE DO DIA ---
+      // Fase do Dia
       const fase = obterDadosFase(horaPoke);
       const badge = document.getElementById('phaseBadge');
       badge.textContent = fase.nome;
       badge.style.color = fase.cor;
 
-      // --- CONTADOR REGRESSIVO ---
+      // Contador Regressivo (Tempo Real)
       let segundosAlvoPoke = fase.proximaHora * 3600;
       if (segundosAlvoPoke <= totalSegundosDiaPoke) {
         segundosAlvoPoke += 24 * 3600;
@@ -297,7 +283,7 @@
       document.getElementById('countdown').textContent = 
         `Próxima fase em (real): ${mRStr}m ${sRStr}s`;
 
-      setTimeout(atualizarRelogio, 200); // Atualização mais fluida para o ponteiro dos segundos
+      setTimeout(atualizarRelogio, 200);
     }
 
     atualizarRelogio();
