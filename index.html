@@ -80,7 +80,7 @@
       transform: rotate(-90deg); /* 00:00 no topo */
     }
 
-    /* Posicionamento exato dos textos nos ângulos de 24h */
+    /* Rótulos dos Horários no Mostrador */
     .hour-label {
       position: absolute;
       font-size: 0.7rem;
@@ -90,11 +90,11 @@
       z-index: 2;
     }
     .label-0 { top: 8px; left: 50%; transform: translateX(-50%); color: #a6adc8; }
-    .label-4 { top: 55px; right: 15px; color: #f9e2af; }
+    .label-4 { top: 50px; right: 20px; color: #f9e2af; }
     .label-14 { bottom: 35px; right: 35px; color: #fab387; }
     .label-20 { bottom: 35px; left: 35px; color: #cba6f7; }
 
-    /* Ponteiros */
+    /* Estilo dos Ponteiros */
     .hand {
       position: absolute;
       bottom: 50%;
@@ -104,6 +104,7 @@
       z-index: 3;
     }
 
+    /* Ponteiro das Horas (Bege) - Circula 360° em 24h (15°/h) */
     .hour-hand {
       width: 6px;
       height: 55px;
@@ -111,6 +112,7 @@
       margin-left: -3px;
     }
 
+    /* Ponteiro dos Minutos (Azul) - Circula 360° em 60m (6°/m) */
     .minute-hand {
       width: 4px;
       height: 75px;
@@ -118,6 +120,7 @@
       margin-left: -2px;
     }
 
+    /* Ponteiro dos Segundos (Rosa) - Circula 360° em 60s (6°/s) */
     .second-hand {
       width: 2px;
       height: 85px;
@@ -179,14 +182,14 @@
     <!-- Relógio Analógico 24h -->
     <div class="analog-clock">
       <svg class="clock-dial" viewBox="0 0 100 100">
-        <!-- Manhã (04:00 às 14:00) -> Fatia Amarela Escura -->
-        <path d="M 50 50 L 93.3 25 A 50 50 0 0 1 6.7 75 Z" fill="#b8860b" />
+        <!-- Manhã (04:00 às 14:00) -> 60° a 210° (Amarelo Escuro) -->
+        <path d="M 50 50 L 75 6.7 A 50 50 0 0 1 6.7 75 Z" fill="#b8860b" />
         
-        <!-- Tarde (14:00 às 20:00) -> Fatia Amarela Clara -->
-        <path d="M 50 50 L 6.7 75 A 50 50 0 0 1 6.7 25 Z" fill="#d4af37" />
+        <!-- Tarde (14:00 às 20:00) -> 210° a 300° (Amarelo Claro) -->
+        <path d="M 50 50 L 6.7 75 A 50 50 0 0 1 25 6.7 Z" fill="#d4af37" />
         
-        <!-- Noite (20:00 às 04:00) -> Fatia Azul Escura -->
-        <path d="M 50 50 L 6.7 25 A 50 50 0 0 1 93.3 25 Z" fill="#121838" />
+        <!-- Noite (20:00 às 04:00) -> 300° a 60° (Azul Escuro) -->
+        <path d="M 50 50 L 25 6.7 A 50 50 0 1 1 75 6.7 Z" fill="#121838" />
       </svg>
 
       <div class="hour-label label-0">00:00</div>
@@ -217,7 +220,7 @@
       const now = new Date();
       document.getElementById('localClock').textContent = `Horário Local: ${now.toLocaleTimeString()}`;
 
-      // Cálculo de tempo exato do jogo
+      // Cálculo de tempo do jogo
       const elapsedRealSeconds = (now - anchorReal) / 1000;
       const elapsedProSeconds = elapsedRealSeconds * 5;
       const totalProMinutes = anchorProMinutes + (elapsedProSeconds / 60);
@@ -230,23 +233,25 @@
       const pad = (n) => String(n).padStart(2, '0');
       document.getElementById("pokeClock").textContent = `${pad(proHour)}:${pad(proMinute)}:${pad(proSecond)}`;
 
-      // Rotação dos Ponteiros para Relógio de 24 Horas:
-      // - Hora: 360° / 24h = 15° por hora
-      // - Minuto: 360° / 60m = 6° por minuto
-      // - Segundo: 360° / 60s = 6° por segundo
+      // --- CÁLCULO DE ÂNGULOS DOS PONTEIROS ---
+      // 1. Hora: Num relógio de 24 horas, cada hora equivale a 15 graus (360° / 24h)
       const exactProHour = (totalProMinutes / 60) % 24;
-      const exactProMinute = totalProMinutes % 60;
-      const exactProSecond = elapsedProSeconds % 60;
-
       const anguloHoras = exactProHour * 15;
+
+      // 2. Minuto: Cada minuto equivale a 6 graus (360° / 60m)
+      const exactProMinute = totalProMinutes % 60;
       const anguloMinutos = exactProMinute * 6;
+
+      // 3. Segundo: Cada segundo equivale a 6 graus (360° / 60s)
+      const exactProSecond = elapsedProSeconds % 60;
       const anguloSegundos = exactProSecond * 6;
 
+      // Aplicação dos ângulos
       document.getElementById('hourHand').style.transform = `rotate(${anguloHoras}deg)`;
       document.getElementById('minuteHand').style.transform = `rotate(${anguloMinutos}deg)`;
       document.getElementById('secondHand').style.transform = `rotate(${anguloSegundos}deg)`;
 
-      // Determinação das Fases (Manhã: 04:00-14:00 | Tarde: 14:00-20:00 | Noite: 20:00-04:00)
+      // Determinação das Fases (04:00-14:00 | 14:00-20:00 | 20:00-04:00)
       let phase, nextPhaseHour, phaseColor;
 
       if (proHour >= 4 && proHour < 14) {
