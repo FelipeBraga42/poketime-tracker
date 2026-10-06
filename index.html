@@ -80,6 +80,7 @@
       transform: rotate(-90deg); /* 00:00 no topo */
     }
 
+    /* Posicionamento exato dos textos nos ângulos de 24h */
     .hour-label {
       position: absolute;
       font-size: 0.7rem;
@@ -89,9 +90,9 @@
       z-index: 2;
     }
     .label-0 { top: 8px; left: 50%; transform: translateX(-50%); color: #a6adc8; }
-    .label-4 { top: 60px; right: 18px; color: #f9e2af; }
-    .label-14 { bottom: 25px; right: 45px; color: #fab387; }
-    .label-20 { bottom: 25px; left: 45px; color: #cba6f7; }
+    .label-4 { top: 55px; right: 15px; color: #f9e2af; }
+    .label-14 { bottom: 35px; right: 35px; color: #fab387; }
+    .label-20 { bottom: 35px; left: 35px; color: #cba6f7; }
 
     /* Ponteiros */
     .hand {
@@ -176,16 +177,16 @@
     <h1>PRO PokéTime Tracker</h1>
     <div class="local-clock" id="localClock">Horário Local: --:--:--</div>
 
-    <!-- Relógio Analógico 24h com fatias ajustadas -->
+    <!-- Relógio Analógico 24h -->
     <div class="analog-clock">
       <svg class="clock-dial" viewBox="0 0 100 100">
-        <!-- Manhã (04:00 às 14:00) -> 60° a 210° -->
+        <!-- Manhã (04:00 às 14:00) -> Fatia Amarela Escura -->
         <path d="M 50 50 L 93.3 25 A 50 50 0 0 1 6.7 75 Z" fill="#b8860b" />
         
-        <!-- Tarde (14:00 às 20:00) -> 210° a 300° -->
+        <!-- Tarde (14:00 às 20:00) -> Fatia Amarela Clara -->
         <path d="M 50 50 L 6.7 75 A 50 50 0 0 1 6.7 25 Z" fill="#d4af37" />
         
-        <!-- Noite (20:00 às 04:00) -> 300° a 60° -->
+        <!-- Noite (20:00 às 04:00) -> Fatia Azul Escura -->
         <path d="M 50 50 L 6.7 25 A 50 50 0 0 1 93.3 25 Z" fill="#121838" />
       </svg>
 
@@ -230,7 +231,7 @@
       const pad = (n) => String(n).padStart(2, '0');
       document.getElementById("pokeClock").textContent = `${pad(proHour)}:${pad(proMinute)}:${pad(proSecond)}`;
 
-      // Atualiza os ponteiros do relógio analógico (15° por hora em mostrador de 24h)
+      // Atualiza os ponteiros (15° por hora em mostrador 24h)
       const anguloHoras = (proHour + proMinute / 60 + proSecond / 3600) * 15;
       const anguloMinutos = (proMinute + proSecond / 60) * 6;
       const anguloSegundos = proSecond * 6;
@@ -239,7 +240,7 @@
       document.getElementById('minuteHand').style.transform = `rotate(${anguloMinutos}deg)`;
       document.getElementById('secondHand').style.transform = `rotate(${anguloSegundos}deg)`;
 
-      // Determinação das Fases (04:00 - 14:00 | 14:00 - 20:00 | 20:00 - 04:00)
+      // Determinação das Fases (Manhã: 04:00-14:00 | Tarde: 14:00-20:00 | Noite: 20:00-04:00)
       let phase, nextPhaseHour, phaseColor;
 
       if (proHour >= 4 && proHour < 14) {
@@ -260,7 +261,7 @@
       badge.textContent = phase;
       badge.style.color = phaseColor;
 
-      // Cálculo do tempo restante para a próxima fase (1 min no jogo = 12 seg reais)
+      // Tempo restante para a próxima fase (1 min no jogo = 12 seg reais)
       const currentMinutes = proHour * 60 + proMinute;
       let nextPhaseMinutes = nextPhaseHour * 60;
       if (nextPhaseMinutes <= currentMinutes) nextPhaseMinutes += 1440;
