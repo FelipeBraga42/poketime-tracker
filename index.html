@@ -102,7 +102,6 @@
       transform-origin: bottom center;
       border-radius: 4px;
       z-index: 3;
-      transition: transform 0.05s linear;
     }
 
     .hour-hand {
@@ -218,23 +217,30 @@
       const now = new Date();
       document.getElementById('localClock').textContent = `Horário Local: ${now.toLocaleTimeString()}`;
 
-      // Cálculo de tempo exato
+      // Cálculo de tempo exato do jogo
       const elapsedRealSeconds = (now - anchorReal) / 1000;
       const elapsedProSeconds = elapsedRealSeconds * 5;
-      const totalProMinutes = anchorProMinutes + Math.floor(elapsedProSeconds / 60);
+      const totalProMinutes = anchorProMinutes + (elapsedProSeconds / 60);
       
       const proHour = Math.floor((totalProMinutes / 60) % 24);
-      const proMinute = totalProMinutes % 60;
+      const proMinute = Math.floor(totalProMinutes % 60);
       const proSecond = Math.floor(elapsedProSeconds % 60);
 
       // Atualiza o relógio digital
       const pad = (n) => String(n).padStart(2, '0');
       document.getElementById("pokeClock").textContent = `${pad(proHour)}:${pad(proMinute)}:${pad(proSecond)}`;
 
-      // Atualiza os ponteiros (15° por hora em mostrador 24h)
-      const anguloHoras = (proHour + proMinute / 60 + proSecond / 3600) * 15;
-      const anguloMinutos = (proMinute + proSecond / 60) * 6;
-      const anguloSegundos = proSecond * 6;
+      // Rotação dos Ponteiros para Relógio de 24 Horas:
+      // - Hora: 360° / 24h = 15° por hora
+      // - Minuto: 360° / 60m = 6° por minuto
+      // - Segundo: 360° / 60s = 6° por segundo
+      const exactProHour = (totalProMinutes / 60) % 24;
+      const exactProMinute = totalProMinutes % 60;
+      const exactProSecond = elapsedProSeconds % 60;
+
+      const anguloHoras = exactProHour * 15;
+      const anguloMinutos = exactProMinute * 6;
+      const anguloSegundos = exactProSecond * 6;
 
       document.getElementById('hourHand').style.transform = `rotate(${anguloHoras}deg)`;
       document.getElementById('minuteHand').style.transform = `rotate(${anguloMinutos}deg)`;
@@ -277,7 +283,7 @@
     }
 
     updateTime();
-    setInterval(updateTime, 200);
+    setInterval(updateTime, 100);
   </script>
 </body>
 </html>
