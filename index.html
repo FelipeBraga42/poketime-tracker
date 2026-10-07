@@ -68,11 +68,15 @@
       box-shadow: 0 4px 15px rgba(0,0,0,0.5);
       margin-bottom: 16px;
       
-      /* Mostrador 24 Horas */
+      /* Mostrador 24 Horas
+         Noite: 20:00 - 04:00 (300° a 60°)
+         Manhã: 04:00 - 15:00 (60° a 225°)
+         Tarde: 15:00 - 20:00 (225° a 300°)
+      */
       background: conic-gradient(
         #121838 0deg 60deg,      /* Noite (00:00 - 04:00) */
-        #b8860b 60deg 210deg,   /* Manhã (04:00 - 14:00) */
-        #d4af37 210deg 300deg,  /* Tarde (14:00 - 20:00) */
+        #b8860b 60deg 225deg,   /* Manhã (04:00 - 15:00) */
+        #d4af37 225deg 300deg,  /* Tarde (15:00 - 20:00) */
         #121838 300deg 360deg   /* Noite (20:00 - 00:00) */
       );
     }
@@ -88,7 +92,7 @@
     }
     .label-0 { top: 8px; left: 50%; transform: translateX(-50%); color: #a6adc8; }
     .label-4 { top: 45px; right: 22px; color: #f9e2af; }
-    .label-14 { bottom: 35px; right: 35px; color: #fab387; }
+    .label-15 { bottom: 22px; right: 45px; color: #fab387; }
     .label-20 { bottom: 35px; left: 35px; color: #cba6f7; }
 
     /* Base dos Ponteiros */
@@ -182,7 +186,7 @@
     <div class="analog-clock">
       <div class="hour-label label-0">00:00</div>
       <div class="hour-label label-4">04:00</div>
-      <div class="hour-label label-14">14:00</div>
+      <div class="hour-label label-15">15:00</div>
       <div class="hour-label label-20">20:00</div>
 
       <div class="hand hour-hand" id="hourHand"></div>
@@ -225,15 +229,15 @@
       const pad = (n) => String(n).padStart(2, '0');
       document.getElementById("pokeClock").textContent = `${pad(proHour)}:${pad(proMinute)}:${pad(proSecond)}`;
 
-      // --- CÁLCULO EXATO DOS ÂNGULOS ---
-      // 1. HORAS (Ponteiro Menor): 24h em 360° -> 15° por hora (0.25° por minuto do dia)
+      // --- CÁLCULO DOS ÂNGULOS ---
+      // 1. HORAS (Ponteiro Menor): 24h em 360° -> 15° por hora (0.25° por minuto)
       const anguloHoras = proMinutesInDay * 0.25;
 
       // 2. MINUTOS (Ponteiro Maior): 60m em 360° -> 6° por minuto
       const anguloMinutos = (proMinute + proSecond / 60) * 6;
 
       // 3. SEGUNDOS: 60s em 360° -> 6° por segundo
-      const anguloSegundos = (proSecond) * 6;
+      const anguloSegundos = proSecond * 6;
 
       // Aplicação nos elementos corretos
       document.getElementById('hourHand').style.transform = `rotate(${anguloHoras}deg)`;
@@ -241,13 +245,14 @@
       document.getElementById('secondHand').style.transform = `rotate(${anguloSegundos}deg)`;
 
       // Determinar Fases do Dia
+      // Manhã: 04:00 às 15:00 | Tarde: 15:00 às 20:00 | Noite: 20:00 às 04:00
       let phase, nextPhaseHour, phaseColor;
 
-      if (proHour >= 4 && proHour < 14) {
+      if (proHour >= 4 && proHour < 15) {
         phase = "Manhã 🌅";
-        nextPhaseHour = 14;
+        nextPhaseHour = 15;
         phaseColor = "#f9e2af";
-      } else if (proHour >= 14 && proHour < 20) {
+      } else if (proHour >= 15 && proHour < 20) {
         phase = "Tarde ☀️";
         nextPhaseHour = 20;
         phaseColor = "#fab387";
@@ -261,7 +266,7 @@
       badge.textContent = phase;
       badge.style.color = phaseColor;
 
-      // Contagem decrescente
+      // Contagem decrescente para a próxima fase
       const currentMinutes = proHour * 60 + proMinute;
       let nextPhaseMinutes = nextPhaseHour * 60;
       if (nextPhaseMinutes <= currentMinutes) nextPhaseMinutes += 1440;
